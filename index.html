@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的专属日程日历</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #08036e;
+            --primary-light: #df1710;
+            --bg-color: #d8dffd;
+            --card-bg: #f4f5f7;
+            --text-main: #45566f;
+            --text-muted: #010000;
+            --border-color: #000206;
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        /* 顶部标题与控制栏 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            padding: 20px 28px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .header-title p {
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 4px;
+            font-style: italic;
+            letter-spacing: 0.2px;
+        }
+
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        select.select-box {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+        }
+
+        select.select-box:focus {
+            border-color: var(--primary);
+        }
+
+        /* 主体布局：左窄右宽 */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 左侧边栏 */
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 2, 6, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .add-goal-box {
+            display: flex;
+            gap: 4px;
+        }
+
+        .add-goal-box input {
+            flex-grow: 1;
+            padding: 5px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 11px;
+            background: var(--bg-color);
+            outline: none;
+        }
+
+        .add-goal-box input:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        .add-goal-box button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .goal-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 11px;
+            gap: 6px;
+        }
+
+        .goal-item-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-grow: 1;
+            word-break: break-all;
+        }
+
+        .goal-item input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .goal-item.completed span {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .delete-goal-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .delete-goal-btn:hover {
+            color: #ef4444;
+        }
+
+        .sidebar-section textarea.remarks-input {
+            width: 100%;
+            flex-grow: 1;
+            min-height: 120px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: var(--text-main);
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .sidebar-section textarea.remarks-input:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+        }
+
+        /* 右侧日历大网格 */
+        .calendar-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 2, 6, 0.1);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-cell {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            min-height: 135px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .day-cell:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 14px rgba(8, 3, 110, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .day-cell.other-month {
+            opacity: 0.3;
+            background: transparent;
+            cursor: default;
+        }
+        .day-cell.other-month:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border-color);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .day-cell.today .day-number {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .add-event-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 15px;
+            border-radius: 4px;
+            padding: 1px 5px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .add-event-btn:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow-y: auto;
+            max-height: 85px;
+            flex-grow: 1;
+            padding-right: 2px;
+        }
+
+        .event-item {
+            background: var(--card-bg);
+            border-left: 3px solid var(--primary);
+            padding: 4px 6px;
+            border-radius: 5px;
+            font-size: 11px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            position: relative;
+        }
+
+        .event-item.completed {
+            opacity: 0.5;
+            border-left-color: #94a3b8;
+        }
+        .event-item.completed .event-text {
+            text-decoration: line-through;
+        }
+
+        .event-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-info-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .event-item input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--primary);
+            width: 10px;
+            height: 10px;
+        }
+
+        .event-time {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 10px;
+        }
+
+        .delete-event-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 0 2px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .delete-event-btn:hover {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .event-text {
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .event-notes {
+            font-size: 10px;
+            color: #64748b;
+            font-style: italic;
+            word-break: break-all;
+            margin-top: 2px;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal h3 {
+            margin-bottom: 14px;
+            font-size: 16px;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #ffffff;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .time-range-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-range-group input[type="time"] {
+            flex: 1;
+        }
+
+        .time-range-separator {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .detail-modal {
+            max-width: 520px;
+        }
+
+        .detail-events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            padding-right: 4px;
+        }
+
+        .detail-event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            gap: 10px;
+        }
+
+        .detail-event-item.completed span {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .events-list::-webkit-scrollbar, .goals-list::-webkit-scrollbar, .detail-events-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .events-list::-webkit-scrollbar-thumb, .goals-list::-webkit-scrollbar-thumb, .detail-events-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <div class="header-title">
+                <h1 id="monthYearDisplay">加载中...</h1>
+                <p id="quoteDisplay">“加载中...”</p>
+            </div>
+            <div class="calendar-controls">
+                <button class="nav-btn" onclick="changeMonth(-1)">◀ 上个月</button>
+                <select id="monthSelect" class="select-box" onchange="onSelectChange()">
+                    <option value="0">1月</option>
+                    <option value="1">2月</option>
+                    <option value="2">3月</option>
+                    <option value="3">4月</option>
+                    <option value="4">5月</option>
+                    <option value="5">6月</option>
+                    <option value="6">7月</option>
+                    <option value="8">8月</option>
+                    <option value="8">9月</option>
+                    <option value="9">10月</option>
+                    <option value="10">11月</option>
+                    <option value="11">12月</option>
+                </select>
+                <select id="yearSelect" class="select-box" onchange="onSelectChange()"></select>
+                <button class="nav-btn" onclick="changeMonth(1)">下个月 ▶</button>
+            </div>
+        </header>
+
+        <!-- 主体布局 -->
+        <div class="main-layout">
+            <!-- 左侧侧边栏 -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3>🎯 本月目标</h3>
+                    <div class="add-goal-box">
+                        <input type="text" id="newGoalInput" placeholder="添加新目标..." onkeydown="if(event.key==='Enter') addGoal()">
+                        <button onclick="addGoal()">+</button>
+                    </div>
+                    <div class="goals-list" id="goalsList"></div>
+                </div>
+                <hr style="border: none; border-top: 1px solid rgba(0,2,6,0.1); margin: 2px 0;">
+                <div class="sidebar-section" style="flex-grow: 1;">
+                    <h3>📝 Remarks</h3>
+                    <textarea class="remarks-input" id="remarksInput" placeholder="输入备忘录..." oninput="saveRemarks()"></textarea>
+                </div>
+            </div>
+
+            <!-- 右侧大日历网格 -->
+            <div class="calendar-card">
+                <div class="weekdays">
+                    <div>周一</div>
+                    <div>周二</div>
+                    <div>周三</div>
+                    <div>周四</div>
+                    <div>周五</div>
+                    <div>周六</div>
+                    <div>周日</div>
+                </div>
+                <div class="days-grid" id="daysGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加日程弹窗（已更新时间控件及多行备注输入框） -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal">
+            <h3>添加日程</h3>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="text" id="eventDateInput" readonly style="background-color: #f8fafc; color: #64748b;">
+            </div>
+            <div class="form-group">
+                <label>时间段</label>
+                <div class="time-range-group">
+                    <input type="time" id="eventStartInput" value="09:00">
+                    <span class="time-range-separator">至</span>
+                    <input type="time" id="eventEndInput" value="11:00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>日程内容 (例如: exercise / lecture class)</label>
+                <input type="text" id="eventDescInput" placeholder="输入你的日程安排...">
+            </div>
+            <div class="form-group">
+                <label>备注 (选填)</label>
+                <textarea id="eventNotesInput" rows="3" placeholder="添加补充说明或多行备注..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">取消</button>
+                <button class="btn-submit" onclick="saveEvent()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 放大查看当天日程详情弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal detail-modal">
+            <h3 id="detailModalTitle">📅 当天日程详情</h3>
+            <div class="detail-events-list" id="detailEventsList"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button class="btn-submit" onclick="openModalFromDetail()">+ 添加新日程</button>
+                <button class="btn-cancel" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const monthlyQuotes = [
+            "“一年之计在于春，万物竞发，莫负好时光。” —— 每一份成就，都始于早春的播种与笃行。",
+            "“自律即自由。你所坚持的每一小步，都在构筑未来的高度。” —— 罗曼·罗兰",
+            "“生活不是等待暴风雨过去，而是学会在雨中翩翩起舞。” —— 塞内卡",
+            "“人间四月芳菲尽，正是奋斗好时节。但行好事，莫问前程。” —— 增广贤文",
+            "“行动是治愈恐惧的良药，而犹豫和拖延将不断滋养恐惧。” —— 拿破仑·希尔",
+            "“盛年不重来，一日难再晨。及时当勉励，岁月不待人。” —— 陶渊明",
+            "“真正的强者，是在深夜独自擦干泪水，天亮时依旧微笑着奔跑的人。” —— 尼采",
+            "“八月桂花香，行远自迩，登高自卑，踏实走好脚下的每一步。” —— 中庸",
+            "“九月，是丰收前的蓄力。但凡辛苦， newspapers都是礼物，漫长坚持终有回甘。”",
+            "“十月金秋，行而不辍，未来可期。愿你的每一分努力都不被辜负。”",
+            "“十一月，不念过往，不畏将来。所有的惊艳，都不过是厚积薄发。”",
+            "“岁末将至，敬颂冬绥。愿你在年末交出一份无愧于心的完美答卷。”"
+        ];
+
+        const yearSelect = document.getElementById('yearSelect');
+        for (let y = 2026; y <= 2035; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.innerText = y + '年';
+            yearSelect.appendChild(opt);
+        }
+
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth();
+
+        if (currentYear < 2026) currentYear = 2026;
+        if (currentYear > 2035) currentYear = 2035;
+
+        yearSelect.value = currentYear;
+        document.getElementById('monthSelect').value = currentMonth;
+
+        let eventsData = JSON.parse(localStorage.getItem('my_calendar_events')) || {};
+        let monthlyGoalsData = JSON.parse(localStorage.getItem('my_calendar_goals')) || {};
+        let monthlyRemarksData = JSON.parse(localStorage.getItem('my_calendar_remarks')) || {};
+
+        let selectedDateStr = "";
+
+        // 目标功能
+        function renderGoals() {
+            const key = `${currentYear}-${currentMonth}`;
+            const listContainer = document.getElementById('goalsList');
+            listContainer.innerHTML = '';
+            const goals = monthlyGoalsData[key] || [];
+
+            goals.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `goal-item ${item.done ? 'completed' : ''}`;
+                itemDiv.innerHTML = `
+                    <div class="goal-item-content">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleGoal(${index})">
+                        <span>${item.text}</span>
+                    </div>
+                    <button class="delete-goal-btn" onclick="deleteGoal(${index})">×</button>
+                `;
+                listContainer.appendChild(itemDiv);
+            });
+        }
+
+        function addGoal() {
+            const input = document.getElementById('newGoalInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const key = `${currentYear}-${currentMonth}`;
+            if (!monthlyGoalsData[key]) monthlyGoalsData[key] = [];
+
+            monthlyGoalsData[key].push({ text, done: false });
+            localStorage.setItem('my_calendar_goals', JSON.stringify(monthlyGoalsData));
+
+            input.value = '';
+            renderGoals();
+        }
+
+        function toggleGoal(index) {
+            const key = `${currentYear}-${currentMonth}`;
+            if (monthlyGoalsData[key] && monthlyGoalsData[key][index]) {
+                monthlyGoalsData[key][index].done = !monthlyGoalsData[key][index].done;
+                localStorage.setItem('my_calendar_goals', JSON.stringify(monthlyGoalsData));
+                renderGoals();
+            }
+        }
+
+        function deleteGoal(index) {
+            const key = `${currentYear}-${currentMonth}`;
+            if (monthlyGoalsData[key]) {
+                monthlyGoalsData[key].splice(index, 1);
+                localStorage.setItem('my_calendar_goals', JSON.stringify(monthlyGoalsData));
+                renderGoals();
+            }
+        }
+
+        // 备注
+        function loadRemarks() {
+            const key = `${currentYear}-${currentMonth}`;
+            document.getElementById('remarksInput').value = monthlyRemarksData[key] || '';
+        }
+
+        function saveRemarks() {
+            const key = `${currentYear}-${currentMonth}`;
+            monthlyRemarksData[key] = document.getElementById('remarksInput').value;
+            localStorage.setItem('my_calendar_remarks', JSON.stringify(monthlyRemarksData));
+        }
+
+        // 日历渲染
+        function renderCalendar() {
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+
+            document.getElementById('monthYearDisplay').innerText = `${currentYear}年 ${currentMonth + 1}月`;
+            document.getElementById('quoteDisplay').innerText = monthlyQuotes[currentMonth];
+
+            renderGoals();
+            loadRemarks();
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const startDayOffset = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevTotalDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            const today = new Date();
+            const isCurrentYear = today.getFullYear() === currentYear;
+            const isCurrentMonth = today.getMonth() === currentMonth;
+            const todayDate = today.getDate();
+
+            // 1. 上月余留
+            for (let i = startDayOffset - 1; i >= 0; i--) {
+                const dayNum = prevTotalDays - i;
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.innerHTML = `
+                    <div class="day-header">
+                        <span class="day-number">${dayNum}</span>
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+
+            // 2. 当月天数
+            for (let day = 1; day <= totalDays; day++) {
+                const cell = document.createElement('div');
+                const mStr = (currentMonth + 1) < 10 ? '0' + (currentMonth + 1) : (currentMonth + 1);
+                const dStr = day < 10 ? '0' + day : day;
+                const dateStr = `${currentYear}-${mStr}-${dStr}`;
+                
+                let cellClass = 'day-cell';
+                if (isCurrentYear && isCurrentMonth && day === todayDate) {
+                    cellClass += ' today';
+                }
+                cell.className = cellClass;
+
+                cell.onclick = (e) => {
+                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+                    openDetailModal(dateStr);
+                };
+
+                let eventsHtml = '';
+                if (eventsData[dateStr]) {
+                    eventsData[dateStr].forEach((ev, index) => {
+                        const notesHtml = ev.notes ? `<div class="event-notes">${escapeHtml(ev.notes)}</div>` : '';
+                        eventsHtml += `
+                            <div class="event-item ${ev.done ? 'completed' : ''}">
+                                <div class="event-header-row">
+                                    <div class="event-info-left">
+                                        <input type="checkbox" ${ev.done ? 'checked' : ''} onclick="toggleEvent('${dateStr}', ${index}, event)" title="标记完成">
+                                        <span class="event-time">${ev.time}</span>
+                                    </div>
+                                    <button class="delete-event-btn" onclick="deleteEvent('${dateStr}', ${index}, event)" title="删除">×</button>
+                                </div>
+                                <span class="event-text">${escapeHtml(ev.text)}</span>
+                                ${notesHtml}
+                            </div>
+                        `;
+                    });
+                }
+
+                cell.innerHTML = `
+                    <div class="day-header">
+                        <span class="day-number">${day}</span>
+                        <button class="add-event-btn" onclick="openModal('${dateStr}', event)" title="添加日程">+</button>
+                    </div>
+                    <div class="events-list">
+                        ${eventsHtml}
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+
+            // 3. 下月补白
+            const totalCellsRendered = startDayOffset + totalDays;
+            const remainingCells = totalCellsRendered % 7 === 0 ? 0 : 7 - (totalCellsRendered % 7);
+            for (let day = 1; day <= remainingCells; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.innerHTML = `
+                    <div class="day-header">
+                        <span class="day-number">${day}</span>
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            if (currentYear > 2035) currentYear = 2035;
+            if (currentYear < 2026) currentYear = 2026;
+
+            yearSelect.value = currentYear;
+            document.getElementById('monthSelect').value = currentMonth;
+            renderCalendar();
+        }
+
+        function onSelectChange() {
+            currentYear = parseInt(yearSelect.value);
+            currentMonth = parseInt(document.getElementById('monthSelect').value);
+            renderCalendar();
+        }
+
+        // 打开添加日程弹窗（重置默认控件数据）
+        function openModal(dateStr, e) {
+            if (e) e.stopPropagation();
+            selectedDateStr = dateStr;
+            document.getElementById('eventDateInput').value = dateStr;
+            document.getElementById('eventStartInput').value = '09:00';
+            document.getElementById('eventEndInput').value = '11:00';
+            document.getElementById('eventDescInput').value = '';
+            document.getElementById('eventNotesInput').value = '';
+            document.getElementById('eventModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('eventModal').style.display = 'none';
+        }
+
+        // 保存日程（解析 HTML type="time" 以及多行 textarea）
+        function saveEvent() {
+            const startTime = document.getElementById('eventStartInput').value;
+            const endTime = document.getElementById('eventEndInput').value;
+            const text = document.getElementById('eventDescInput').value.trim();
+            const notes = document.getElementById('eventNotesInput').value.trim();
+
+            if (!startTime || !endTime) {
+                alert('请选择开始和结束时间！');
+                return;
+            }
+
+            if (!text) {
+                alert('请填写日程内容！');
+                return;
+            }
+
+            // 格式化时间呈现，去掉冒号或保留冒号，这里组合为标准时间段格式
+            const startFormatted = startTime.replace(':', '');
+            const endFormatted = endTime.replace(':', '');
+            const timeDisplay = `${startFormatted}-${endFormatted}`;
+
+            if (!eventsData[selectedDateStr]) {
+                eventsData[selectedDateStr] = [];
+            }
+
+            eventsData[selectedDateStr].push({ 
+                time: timeDisplay, 
+                text, 
+                notes, 
+                done: false 
+            });
+            localStorage.setItem('my_calendar_events', JSON.stringify(eventsData));
+
+            closeModal();
+            renderCalendar();
+            if (document.getElementById('detailModal').style.display === 'flex') {
+                openDetailModal(selectedDateStr);
+            }
+        }
+
+        function toggleEvent(dateStr, index, e) {
+            if (e) e.stopPropagation();
+            if (eventsData[dateStr] && eventsData[dateStr][index]) {
+                eventsData[dateStr][index].done = !eventsData[dateStr][index].done;
+                localStorage.setItem('my_calendar_events', JSON.stringify(eventsData));
+                renderCalendar();
+                if (document.getElementById('detailModal').style.display === 'flex') {
+                    openDetailModal(dateStr);
+                }
+            }
+        }
+
+        function deleteEvent(dateStr, index, e) {
+            if (e) e.stopPropagation();
+            if (eventsData[dateStr]) {
+                eventsData[dateStr].splice(index, 1);
+                if (eventsData[dateStr].length === 0) {
+                    delete eventsData[dateStr];
+                }
+                localStorage.setItem('my_calendar_events', JSON.stringify(eventsData));
+                renderCalendar();
+                if (document.getElementById('detailModal').style.display === 'flex') {
+                    openDetailModal(dateStr);
+                }
+            }
+        }
+
+        function openDetailModal(dateStr) {
+            selectedDateStr = dateStr;
+            document.getElementById('detailModalTitle').innerText = `📅 ${dateStr} 日程详情`;
+            
+            const listContainer = document.getElementById('detailEventsList');
+            listContainer.innerHTML = '';
+
+            const events = eventsData[dateStr] || [];
+            if (events.length === 0) {
+                listContainer.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px; font-size: 13px;">当天暂无任何活动安排</div>`;
+            } else {
+                events.forEach((ev, index) => {
+                    const item = document.createElement('div');
+                    item.className = `detail-event-item ${ev.done ? 'completed' : ''}`;
+                    const notesHtml = ev.notes ? `<div style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 4px; white-space: pre-wrap;">${escapeHtml(ev.notes)}</div>` : '';
+                    
+                    item.innerHTML = `
+                        <div style="display: flex; flex-direction: column; flex-grow: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" ${ev.done ? 'checked' : ''} onchange="toggleEvent('${dateStr}', ${index})">
+                                <span style="font-weight: 700; color: var(--primary);">${ev.time}</span>
+                                <span style="font-weight: 600;">${escapeHtml(ev.text)}</span>
+                            </div>
+                            ${notesHtml}
+                        </div>
+                        <button class="delete-goal-btn" onclick="deleteEvent('${dateStr}', ${index})" title="删除">删除</button>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        function openModalFromDetail() {
+            closeDetailModal();
+            openModal(selectedDateStr);
+        }
+
+        // 辅助转义防脚本注入
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
